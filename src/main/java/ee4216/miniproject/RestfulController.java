@@ -7,7 +7,7 @@ package ee4216.miniproject;
 
 /**
  *
- * @author Sin Yat Ming
+ * @author 55212718
  */
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
