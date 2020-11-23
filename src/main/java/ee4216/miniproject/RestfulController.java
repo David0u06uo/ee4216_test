@@ -98,7 +98,7 @@ public class RestfulController {
         String tk = (String)data.get("token");
         String tokenpw = (String)data.get("tokenpw");
         System.out.println(tokenManager.get(tk));
-        if (!tokenManager.get(tk).equals(tokenpw))
+        if (tokenpw.length()!=64 || !tokenManager.get(tk).equals(tokenpw))
             return "Not Authorized";
         List<Notes> temp = retrievebyToken(tk);
         mapper = new ObjectMapper();
@@ -277,7 +277,7 @@ public class RestfulController {
         String token = (String)data.get("token");
         String newC = (String)data.get("content");
         String tokenpw = (String)data.get("tokenpw");
-        if (!tokenManager.get(token).equals(tokenpw))
+        if (tokenpw.length()!=64 || !tokenManager.get(token).equals(tokenpw))
             return "Not Authorized";
         if(updateMemo(id,token,newC))
             return "changed";
@@ -312,7 +312,7 @@ public class RestfulController {
         int id = parseInt((String)data.get("id"));
         String token = (String)data.get("token");
         String tokenpw = (String)data.get("tokenpw");
-        if (!tokenManager.get(token).equals(tokenpw))
+        if (tokenpw.length()!=64 || !tokenManager.get(token).equals(tokenpw))
             return "Not Authorized";
         if(deleteMemo(id,token))
             return "it is goen";
