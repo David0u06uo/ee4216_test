@@ -26,24 +26,23 @@ import org.springframework.web.bind.annotation.RestController;
 import static java.lang.Integer.parseInt;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.PreparedStatement;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import javax.servlet.http.HttpServletResponse;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.apache.commons.codec.digest.DigestUtils;
 
 @RestController
+@CrossOrigin(origins = "*", maxAge = 3600)
 @RequestMapping(path="/api")
 public class RestfulController {
-    @ModelAttribute
-    public void setResponseHeader(HttpServletResponse response) {
-       response.setHeader("Access-Control-Allow-Origin", "*");
-    }
     
+    Map tokenManager = new HashMap();
+   
     @GetMapping("/status")        
     public String status() 
     {
@@ -97,10 +96,13 @@ public class RestfulController {
         ObjectMapper mapper = new ObjectMapper();
         Map<String, Object> data = mapper.readValue(userDetails, new TypeReference<HashMap<String, Object>>() {}); 
         String tk = (String)data.get("token");
+        String tokenpw = (String)data.get("tokenpw");
+        System.out.println(tokenManager.get(tk));
+        if (!tokenManager.get(tk).equals(tokenpw))
+            return "Not Authorized";
         List<Notes> temp = retrievebyToken(tk);
         mapper = new ObjectMapper();
         String result = mapper.writeValueAsString(temp);
-        
         return result;        
     }    
     
@@ -140,7 +142,7 @@ public class RestfulController {
             return null;
         }
     }
-    
+
     @PostMapping("/NewUser")  
     public String newUser(@RequestBody String userDetails) throws JsonProcessingException, SQLException {
         ObjectMapper mapper = new ObjectMapper();
@@ -216,6 +218,26 @@ public class RestfulController {
         return result;
     }
     
+    @PostMapping("/GetMyTokenpw")
+    public String getTokenpw(@RequestBody String userDetails) throws JsonProcessingException, SQLException {
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String, Object> data = mapper.readValue(userDetails, new TypeReference<HashMap<String, Object>>() {});
+        String username = (String)data.get("username");
+        String pw = (String)data.get("password");
+        return hellotokenpw(username,pw);
+    }
+    
+    public String hellotokenpw(String ID,String PW) throws SQLException {
+        String token = hellotoken(ID,PW);
+        if (token.length()!=64)
+            return "what are you doing";
+        String tempPW = DigestUtils.sha256Hex(token + Double.toString(Math.random()));
+        tokenManager.put(token, tempPW);
+        //System.out.println(tempPW);
+        return tempPW;
+        
+    }
+    
     @PostMapping("/postMemo")
     public String postMemoAPI(@RequestBody String userDetails) throws JsonProcessingException, SQLException {
         ObjectMapper mapper = new ObjectMapper();
@@ -254,6 +276,9 @@ public class RestfulController {
         int id = parseInt((String)data.get("id"));
         String token = (String)data.get("token");
         String newC = (String)data.get("content");
+        String tokenpw = (String)data.get("tokenpw");
+        if (!tokenManager.get(token).equals(tokenpw))
+            return "Not Authorized";
         if(updateMemo(id,token,newC))
             return "changed";
         return "update fail";
@@ -286,6 +311,9 @@ public class RestfulController {
         Map<String, Object> data = mapper.readValue(userDetails, new TypeReference<HashMap<String, Object>>() {});
         int id = parseInt((String)data.get("id"));
         String token = (String)data.get("token");
+        String tokenpw = (String)data.get("tokenpw");
+        if (!tokenManager.get(token).equals(tokenpw))
+            return "Not Authorized";
         if(deleteMemo(id,token))
             return "it is goen";
         return "delete fail";
