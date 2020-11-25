@@ -77,12 +77,14 @@ public class RestfulController {
                 int id = rs.getInt("id");
                 String token = rs.getString("token");
                 String content = rs.getString("content");
-
-                Notes tempNote = new Notes(token,content,id ); 
+                String color = rs.getString("color");
+                int font_size = rs.getInt("font_size");
+                
+                Notes tempNote = new Notes(token,content,id,color,font_size); 
                 result.add(tempNote);
 
             }
-            System.out.println(result);
+            //System.out.println(result);
             return result;
         }
         catch(SQLException e)
@@ -97,7 +99,7 @@ public class RestfulController {
         Map<String, Object> data = mapper.readValue(userDetails, new TypeReference<HashMap<String, Object>>() {}); 
         String tk = (String)data.get("token");
         String tokenpw = (String)data.get("tokenpw");
-        System.out.println(tokenManager.get(tk));
+        //System.out.println(tokenManager.get(tk));
         if (tokenpw.length()!=64 || !tokenManager.get(tk).equals(tokenpw))
             return "Not Authorized";
         List<Notes> temp = retrievebyToken(tk);
@@ -129,12 +131,15 @@ public class RestfulController {
                 int id = rs.getInt("id");
                 String token = rs.getString("token");
                 String content = rs.getString("content");
-
-                Notes tempNote = new Notes(token,content,id ); 
+                String color = rs.getString("color");
+                int font_size = rs.getInt("font_size");
+                
+                Notes tempNote = new Notes(token,content,id,color,font_size);
+                //System.out.println(tempNote.toText());
                 result.add(tempNote);
-
+                
             }
-            System.out.println(result);
+            //System.out.println(result);
             return result;
         }
         catch(SQLException e)
@@ -177,7 +182,7 @@ public class RestfulController {
             return false;
         PreparedStatement statement = con.prepareStatement
             ("insert into userlist (username, password, token)" + " VALUES (?,?,?)");
-        System.out.println(temp.getusername());
+        //System.out.println(temp.getusername());
         statement.setString(1, temp.getusername()); 
         statement.setString(2, temp.getPW()); 
         statement.setString(3, temp.getToken()); 
@@ -244,12 +249,14 @@ public class RestfulController {
         Map<String, Object> data = mapper.readValue(userDetails, new TypeReference<HashMap<String, Object>>() {});
         String token = (String)data.get("token");
         String content = (String)data.get("content");
-        if(postMemo(token,content))
+        String color = (String)data.get("color");
+        int font_size = parseInt((String)data.get("font_size"));
+        if(postMemo(token,content,color,font_size))
             return "cool";
         return "fail";
     }
     
-    public boolean postMemo(String token, String content) throws SQLException{
+    public boolean postMemo(String token, String content,String color,int font_size) throws SQLException{
         Connection con = null;
         Statement st = null;
         ResultSet rs = null;
@@ -262,9 +269,11 @@ public class RestfulController {
         st = con.createStatement();
         
         PreparedStatement statement = con.prepareStatement
-            ("insert into memodb (token, content)" + " VALUES (?,?)");
+            ("insert into memodb (token, content,color,font_size)" + " VALUES (?,?,?,?)");
         statement.setString(1, token);
         statement.setString(2, content);
+        statement.setString(3, color);
+        statement.setInt(4, font_size);
         statement.executeUpdate(); 
         return true;
     }
@@ -277,14 +286,17 @@ public class RestfulController {
         String token = (String)data.get("token");
         String newC = (String)data.get("content");
         String tokenpw = (String)data.get("tokenpw");
+        String color = (String)data.get("color");
+        int font_size = parseInt((String)data.get("font_size"));
         if (tokenpw.length()!=64 || !tokenManager.get(token).equals(tokenpw))
             return "Not Authorized";
-        if(updateMemo(id,token,newC))
+        //System.out.println(id + color + font_size);
+        if(updateMemo(id,token,newC,color,font_size))
             return "changed";
         return "update fail";
     }
     
-    public boolean updateMemo(int id,String token,String content) throws SQLException{
+    public boolean updateMemo(int id,String token,String content,String color,int font_size) throws SQLException{
         Connection con = null;
         Statement st = null;
         ResultSet rs = null;
@@ -297,10 +309,12 @@ public class RestfulController {
         st = con.createStatement();
         
         PreparedStatement statement = con.prepareStatement
-            ("update memodb SET content=? where id=? AND token=?");
+            ("update memodb SET content=?, color=?, font_size=? where id=? AND token=?");
         statement.setString(1,content);
-        statement.setInt(2, id);
-        statement.setString(3, token);
+        statement.setString(2, color);
+        statement.setInt(3, font_size);
+        statement.setInt(4, id);
+        statement.setString(5, token);
         statement.executeUpdate(); 
         return true;
     }
